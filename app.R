@@ -25,17 +25,19 @@ species <- readRDS("www/species.rds")
 df1 <- readRDS("www/Platycnemis pennipes.rds")
 
 
-# Module for reading in files.
+# Function for reading in files.
 choicer <- function(sciName){
     if(nchar(sciName)<1){
         df <- df1
     }else{
         df <- readRDS(paste("www/", gsub("\\ -.*",'', sciName), ".rds", sep = ""))
     }
+    df$ObservationURL <- paste("https://observation.org/observation/", df$ObservationURL, sep = "")
+    
     return(df)
 }
 
-# Module for plotting data. Pass in data from reactive expression that depends on the other modules.
+# Function for plotting data. Pass in data from reactive expression that depends on other functions.
 pluto <- function(df){
     df$Date <- format(as.Date(df$Date, format = "%y-%mm-%dd"),"%Y")
     suppressWarnings(date.min <- min(as.numeric(df$Date))) ; suppressWarnings(date.max <- max(as.numeric(df$Date)))
@@ -105,36 +107,42 @@ ui <- fluidPage(
     ),
     fluidRow(id = "fluidRow3",
              # Display a simple table that has links to the observations and dates
-             tags$br(),
+             tags$h6(strong("Download Map Data"), align = "left"),
              dataTableOutput("mapInfo"),
+             tags$h6(strong("Data: https://doi.org/10.15468/dl.8qs7ms? --- Web scraping: https://observation.org/"), align = "center"),
     ),
     
 )
 
 server <- function(input, output, session) {
-    
+    # Output the total number of observations
     output$totNum <- renderText({paste("-",nrow(mapDat()),"-")})
     
+    # Use observer to dynamically update select I/O
     observe({
         updateSelectizeInput(session,'sciName', choices = species$ScientificName, server = T)
     })
     
+    # Create a reactive expression to communicate with data reading module
     mapDat <- reactive({
         choicer(input$sciName)
     })
     
+    # Map with margins bounded
     output$map <- renderLeaflet({
         leaflet(df1) %>%
             addTiles() %>%
             fitBounds(~19, ~50, ~22, ~55)
     })
 
+    # Use observer to dynamically clear and update map
     observe({
         leafletProxy("map", data = mapDat()) %>%
             clearMarkers() %>%
-            addMarkers()
+            addMarkers(label = ~ObservationURL)
         })
     
+    # Show a trend of observations with some styling
     output$box <- renderPlot({
         ggplot(tryCatch(mapDat() %>% pluto(),
                         error = function(e) {Year <- NA ; Observations <- 0 ; diff <- data.frame(Year, Observations)}), aes(x = Year, y = Observations)) + 
@@ -149,13 +157,16 @@ server <- function(input, output, session) {
         
     })
     
-    output$mapInfo <- DT::renderDataTable({
-        tab <- mapDat()
-        tab <- select(tab,c("ObservationURL","Date"))
-        tab$ObservationURL <- paste("https://observation.org/observation/", tab$ObservationURL, sep = "")
-        tab$Date <- gsub("T00:00:00Z", "", tab$Date)
-        tab
-        })
+    # Show a table of URL links. Remember the data pre-processing step that removed the link? Its back!
+    output$mapInfo <- DT::renderDataTable(select(mapDat(), c("ObservationURL", "Date", "Longitude", "Latitude")),
+        extensions = c('Buttons', 'Scroller'),
+        options = list(
+            dom = 'Bfrtip',
+            deferRender = TRUE,
+            scrollY = 150,
+            scroller = TRUE,
+            buttons = c('copy', 'csv', 'excel', 'pdf', 'print'))
+        )
 }
 
 shinyApp(ui, server)

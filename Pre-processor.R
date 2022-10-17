@@ -17,52 +17,55 @@ head(df)
 # vernacularName and scientificName
 
 df <- select(df,
-             c("verbatimScientificName", "scientificName", "occurrenceID", "decimalLongitude", "decimalLatitude", "eventDate"))
+             c("verbatimScientificName", "scientificName",
+               "occurrenceID", "decimalLongitude", "decimalLatitude", "eventDate"))
 
 # We and remove duplicates 
 # We remove duplicates and rename the columns
 df <- df[!duplicated(df),]
-colnames(df) <- c("ScientificName", "vernacularName", "ObservationURL", "Longitude", "Latitude", "Date")
+colnames(df) <- c("ScientificName", "vernacularName",
+                  "ObservationURL", "Longitude", "Latitude", "Date")
 
 #-------------Critical step-----It takes time-----This code was run elsewhere
 # Our vernacular name is not actually vernacular, so we have to find it from the web
 # Set vernacular name to 0 or Null or anything really, we will update it, remove duplicates
 
 df$vernacularName <- 0
-# dfv <- select(df, c("ScientificName", "vernacularName"))
-# dfv <- dfv[!duplicated(dfv),]
-# 
-# # This function extracts the vernacular name from the observations website
-# # It takes the scientific name and searches the observation.org website
-# 
-# getVernacular <- function(txt){
-#   name <- gsub(" ", "+", txt)
-#   name <- gsub("\\/.*",'', name)
-#   url0 <- paste0("https://observation.org/species/search/?q=", name, "&species_group=0")
-#   tryCatch(webpage <- url0 %>% GET(., timeout(30)) %>% read_html(),
-#            error = function(e) {webpage <<- NA })
-#   if(!is.na(paste(webpage)[[1]]) == FALSE){
-#     name <- name
-#   }else{
-#     name2 <- webpage %>%
-#       html_nodes("span.species-common-name") %>%
-#       html_text()
-#     if (length(name2) == 0){
-#       name <- name
-#     } else{
-#       name <- name2[[1]]
-#     }
-#     
-#   }
-#   return(name)
-# }
-# 
-# # Get all the vernacular names from all unique scientific name
-# i <- 254
-# while (i <= nrow(dfv)) {
-#   dfv[i,2] <- getVernacular(dfv[i,1])
-#   i <- i+1
-# }
+dfv <- select(df, c("ScientificName", "vernacularName"))
+dfv <- dfv[!duplicated(dfv),]
+
+# This function extracts the vernacular name from the observations website
+getVernacular <- function(txt){
+  name <- gsub(" ", "+", txt)
+  name <- gsub("\\/.*",'', name)
+  
+  url0 <- paste0("https://observation.org/species/search/?q=", name, "&species_group=0")
+  
+  tryCatch(webpage <- url0 %>% GET(., timeout(30)) %>% read_html(),
+           error = function(e) {webpage <<- NA })
+  
+  if(!is.na(paste(webpage)[[1]]) == FALSE){
+    name <- name
+  }else{
+    name2 <- webpage %>%
+      html_nodes("span.species-common-name") %>%
+      html_text()
+    if (length(name2) == 0){
+      name <- name
+    } else{
+      name <- name2[[1]]
+    }
+
+  }
+  return(name)
+}
+
+# Get all the vernacular names from all unique scientific name
+i <- 254
+while (i <= nrow(dfv)) {
+  dfv[i,2] <- getVernacular(dfv[i,1])
+  i <- i+1
+}
 
 #----------YOU NOW HAVE BOTH THE SCIENTIFIC AND THE VERNACULAR NAME-----------
 
