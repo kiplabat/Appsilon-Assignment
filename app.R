@@ -112,29 +112,34 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
-    
+    # Output the total number of observations
     output$totNum <- renderText({paste("-",nrow(mapDat()),"-")})
     
+    # Use observer to dynamically update select I/O
     observe({
         updateSelectizeInput(session,'sciName', choices = species$ScientificName, server = T)
     })
     
+    # Create a reactive expression to communicate with data reading module
     mapDat <- reactive({
         choicer(input$sciName)
     })
     
+    # Map with margins bounded
     output$map <- renderLeaflet({
         leaflet(df1) %>%
             addTiles() %>%
             fitBounds(~19, ~50, ~22, ~55)
     })
 
+    # Use observer to dynamically clear and update map
     observe({
         leafletProxy("map", data = mapDat()) %>%
             clearMarkers() %>%
             addMarkers()
         })
     
+    # Show a trend of observations with some styling
     output$box <- renderPlot({
         ggplot(tryCatch(mapDat() %>% pluto(),
                         error = function(e) {Year <- NA ; Observations <- 0 ; diff <- data.frame(Year, Observations)}), aes(x = Year, y = Observations)) + 
@@ -149,6 +154,7 @@ server <- function(input, output, session) {
         
     })
     
+    # Show a table of URL links. Remember the data pre-processing step that removed the link? Its back!
     output$mapInfo <- DT::renderDataTable({
         tab <- mapDat()
         tab <- select(tab,c("ObservationURL","Date"))
