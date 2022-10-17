@@ -1,0 +1,18 @@
+body
+	{
+	width:100%;
+	height:100%
+	}
+panel
+	{
+	background-color: white;
+        opacity: 0.85;
+        padding: 20px 20px 20px 20px;
+        margin: auto;
+        border-radius: 5pt;
+        box-shadow: 0pt 0pt 6pt 0px rgba(61,59,61,0.48);
+        padding-bottom: 2mm;
+        padding-top: 1mm;
+	z-index:1000;
+	align:center;
+	}
