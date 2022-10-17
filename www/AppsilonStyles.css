@@ -1,18 +1,27 @@
-body
-	{
-	width:100%;
-	height:100%
-	}
-panel
-	{
-	background-color: white;
-        opacity: 0.85;
-        padding: 20px 20px 20px 20px;
-        margin: auto;
-        border-radius: 5pt;
-        box-shadow: 0pt 0pt 6pt 0px rgba(61,59,61,0.48);
-        padding-bottom: 2mm;
-        padding-top: 1mm;
-	z-index:1000;
-	align:center;
-	}
+/* Get a fancy font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap');
+
+body {
+            background-color: gray;
+            width:100%;
+            height:100%;
+            }
+      #fluidRow {
+                 background-color: white;
+                 border-radius: 8pt;
+                 margin: auto;
+                 z-index:1000;
+                 align:center;
+      }
+      #fluidRow2{
+                 background-color: white;
+                 margin: auto;
+                 border-radius: 8pt;align:center;
+      }
+      #fluidRow3{
+                 background-color: white;
+                 margin: auto;
+                 border-radius: 8pt;
+                 align:center;
+                 z-index:5000;
+      }
