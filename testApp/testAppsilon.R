@@ -3,7 +3,7 @@ library(testthat)
 
 # Initialize the test run with the correct parameters
 # Loading timeout is necessarily longer to accommodate app size
-app <- ShinyDriver$new("E:/Google Drive/Jobs/Appsilon/Shiny_Appsilon/Appsilon_Assignment/Appsilon-Assignment/app.R",loadTimeout = 40000)
+app <- ShinyDriver$new("~/app.R",loadTimeout = 40000)
 
 # Now start the testing function
 test_that("App Works correctly",{
