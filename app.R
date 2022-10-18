@@ -1,36 +1,25 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
-library(rvest)
-library(tidyverse)
-library(RCurl)
+library(shiny)
+library(leaflet)
+library(RColorBrewer)
 library(data.table)
 library(dplyr)
+library(ggplot2)
+library(rvest)
+library(httr)
+library(htmltools)
+library(feather)
+library(tidyverse)
+library(RCurl)
 library(RSelenium)
 library(stringr)
 library(qdapRegex)
 library(htm2txt)
 library(httr)
-library(shiny)
 library(tidyr)
 library(DT)
-library(googlesheets4)
 library(leaflet.esri)
 
-g_sheet <- function(file){
-    dataKING <- file
-    gs4_deauth()
-    gs4_auth(cache = ".secrets", email = "labatt.comptexx@gmail.com")
-    ss <- "https://docs.google.com/spreadsheets/d/1WPikfvmrovBY0Z7R6rzhkP_lY85K4NMUT3ojWd964jo/edit"
-    sheet_append(ss, dataKING)
-}
 
-<<<<<<< HEAD
 # Read in the necessary files/ Considered as BASE FILES
 species <- readRDS("www/species.rds")
 df1 <- readRDS("www/Betula spec .rds")
@@ -93,7 +82,7 @@ ui <- fluidPage(id = "fluidPage1",
              ),
              
              column(8, align = 'center',
-                 tags$em("Search or select [Scientific Name - and/or- Vernacular Name] from the dropdown", align = 'center'),
+                 tags$em("Search or select [Scientific - and/or- Common Name] from the dropdown", align = 'center'),
                  # Add a server controlled selectInput dropdown
                  selectizeInput(width = 400,
                                 'sciName',label = NULL,
@@ -170,6 +159,16 @@ server <- function(input, output, session) {
                 axis.text.x = element_text(angle = 90, size = 10, margin = margin(0, 0, 0, 0)),
                 axis.text.y = element_text(lineheight = 20)
                 )})
+    # Give an option to download the mapping data
+    output$mapInfo <- DT::renderDataTable(select(mapDat(), c("ObservationID", "Date", "Longitude", "Latitude")),
+                                          extensions = c('Buttons', 'Scroller'),
+                                          options = list(
+                                              dom = 'Bfrtip',
+                                              deferRender = TRUE,
+                                              scrollY = 150,
+                                              scroller = TRUE,
+                                              buttons = c('copy', 'csv', 'excel', 'pdf', 'print'))
+    )
 }
 
 shinyApp(ui = ui, server = server)
