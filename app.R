@@ -18,11 +18,12 @@ library(httr)
 library(tidyr)
 library(DT)
 library(googlesheets4)
+library(leaflet.esri)
 
 
 # Read in the necessary files/ Considered as BASE FILES
 species <- readRDS("www/species.rds")
-df1 <- readRDS("www/Platycnemis pennipes.rds")
+df1 <- readRDS("www/Betula spec .rds")
 
 
 # Function for reading in files.
@@ -32,7 +33,10 @@ choicer <- function(sciName){
     }else{
         df <- readRDS(paste("www/", gsub("\\ -.*",'', sciName), ".rds", sep = ""))
     }
-    df$ObservationURL <- paste("https://observation.org/observation/", df$ObservationURL, sep = "")
+    lnk1 <- paste("<a href=\"https://observation.org/observation/", df$ObservationURL,"\"", sep = "")
+    lnk2 <- paste(" target=\"_blank\">", "Open Observation: ", df$ObservationURL, sep = "")
+    df$ObservationID <- paste("https://observation.org/observation/", df$ObservationURL, sep = "")
+    df$ObservationURL <- paste(lnk1, lnk2, "</a>", sep = "")
     
     return(df)
 }
@@ -62,10 +66,10 @@ pluto <- function(df){
 }
 
 
-ui <- fluidPage(
+ui <- fluidPage(id = "fluidPage1",
 
 # Pass some data into HTML head, NOTE also the CSS style sheet (although not advanced type). Favicon and logo designed.
-    tags$head(HTML("<title>Shiny App| Polish Biodiversity Observatory</title>",
+    tags$head(HTML("<title>App | Polish Biodiversity Observatory</title>",
                    '<meta name="Keywords" content = "Polish Biodiversity Observatory is an interactive web app for mapping various species sightings around Poland">',
                    '<meta name="viewport" content="width=device-width, initial-scale=1.0">'),
               tags$link(rel="shortcut icon", href='Logo.png'),
@@ -88,8 +92,8 @@ ui <- fluidPage(
              ),
              column(2, align = 'center',
                     # Add a section for displaying simple computations
-                    tags$h6("Total Observations:"),
-                    tags$h3(strong(textOutput('totNum'))),
+                    tags$h6("Total Observations:"),tags$h4(strong(textOutput('totNum'))),
+                    
              ),
              
     ),
@@ -109,7 +113,8 @@ ui <- fluidPage(
              # Display a simple table that has links to the observations and dates
              tags$h6(strong("Download Map Data"), align = "left"),
              dataTableOutput("mapInfo"),
-             tags$h6(strong("Data: https://doi.org/10.15468/dl.8qs7ms? --- Web scraping: https://observation.org/"), align = "center"),
+             tags$h6(strong("Data: https://doi.org/10.15468/dl.8qs7ms?"), align = "center"),
+             tags$h6(strong("Web scraping: https://observation.org/"), align = "center"),
     ),
     
 )
@@ -131,15 +136,15 @@ server <- function(input, output, session) {
     # Map with margins bounded
     output$map <- renderLeaflet({
         leaflet(df1) %>%
-            addTiles() %>%
-            fitBounds(~19, ~50, ~22, ~55)
+            setView(lng = 19.6, lat = 52.1, zoom = 6) %>%
+            addEsriBasemapLayer(esriBasemapLayers$Topographic)
     })
 
     # Use observer to dynamically clear and update map
     observe({
         leafletProxy("map", data = mapDat()) %>%
             clearMarkers() %>%
-            addMarkers(label = ~ObservationURL)
+            addMarkers(popup = ~ObservationURL, label = "Click Observation")
         })
     
     # Show a trend of observations with some styling
@@ -150,6 +155,7 @@ server <- function(input, output, session) {
             scale_y_continuous(expand = c(0, 0)) +
             geom_text(aes(label = Observations), angle = 90, vjust = 0.5, hjust = 1, color = "white") +
             theme(
+                plot.background = element_rect(fill = "white"),
                 plot.title = element_text( size = 13, margin = margin(0, 0, 0, 0), hjust = 0.5),
                 axis.text.x = element_text(angle = 90, size = 10, margin = margin(0, 0, 0, 0)),
                 axis.text.y = element_text(lineheight = 20)
@@ -158,7 +164,8 @@ server <- function(input, output, session) {
     })
     
     # Show a table of URL links. Remember the data pre-processing step that removed the link? Its back!
-    output$mapInfo <- DT::renderDataTable(select(mapDat(), c("ObservationURL", "Date", "Longitude", "Latitude")),
+
+    output$mapInfo <- DT::renderDataTable(select(mapDat(), c("ObservationID", "Date", "Longitude", "Latitude")),
         extensions = c('Buttons', 'Scroller'),
         options = list(
             dom = 'Bfrtip',

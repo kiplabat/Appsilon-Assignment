@@ -96,8 +96,8 @@ correctness, it was tested against the sum of records retrieved.
 
 The R Shiny app is deployed at
 <https://labatt.shinyapps.io/Appsilon_Assignment/>.  
-The code and data hosted privately and shared with @appsilon-hiring on
-<https://github.com/kiplabat/Appsilon-Assignment>.
+The code and data are hosted privately and shared with @appsilon-hiring
+on <https://github.com/kiplabat/Appsilon-Assignment>.
 
 ### Conclusions
 
